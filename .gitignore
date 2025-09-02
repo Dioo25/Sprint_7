@@ -1,0 +1,15 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+out/
+
+# Maven target
+target/*
+!target/allure-results/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
