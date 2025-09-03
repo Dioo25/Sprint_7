@@ -1,18 +1,20 @@
-# IntelliJ IDEA
+# IDE
 .idea/
 *.iml
-out/
 
-# Maven target
-/target/
-!target/allure-results/   
+# Build
+/target/*
+!/target/allure-results/
+
+# Allure local cache
+/.allure/
+
+# Root-level Allure results (игнорируем корневую папку)
+ /allure-results/
+
 # Logs
 *.log
 
-# OS files
+# OS
 .DS_Store
 Thumbs.db
-
-# Тестовые ресурсы 
-src/test/resources/
-src/test/resources/META-INF/
