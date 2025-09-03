@@ -7,20 +7,25 @@ import model.Courier;
 import model.CourierCredentials;
 
 public class CourierSteps {
-    CourierClient courierClient = new CourierClient();
+    private final CourierClient courierClient = new CourierClient();
 
-    @Step("Создать курьера")
+    @Step("Создание курьера")
     public Response createCourier(Courier courier) {
-        return courierClient.createCourier(courier);
+        return courierClient.create(courier);
     }
 
-    @Step("Авторизовать курьера")
-    public Response loginCourier(CourierCredentials creds) {
-        return courierClient.loginCourier(creds);
+    @Step("Логин курьера")
+    public Response loginCourier(CourierCredentials credentials) {
+        return courierClient.login(credentials);
     }
 
-    @Step("Удалить курьера")
-    public Response deleteCourier(int id) {
-        return courierClient.deleteCourier(id);
+    @Step("Удаление курьера по id")
+    public Response deleteCourier(int courierId) {
+        return courierClient.delete(courierId);
+    }
+
+    @Step("Удаление курьера без id")
+    public Response deleteCourierWithoutId() {
+        return courierClient.deleteWithoutId();
     }
 }

@@ -3,6 +3,8 @@ package client;
 import io.qameta.allure.Step;
 import io.restassured.response.Response;
 
+import java.util.Map;
+
 import static io.restassured.RestAssured.given;
 
 public class OrderClient {
@@ -41,5 +43,15 @@ public class OrderClient {
                 .header("Content-type", "application/json")
                 .when()
                 .get(ORDER_PATH);
+    }
+
+    @Step("Отменить заказ по треку")
+    public Response cancelOrder(int track) {
+        // По API: отмена заказа по параметру track — делаем POST/PUT на /orders/cancel с телом {"track": track}
+        return given()
+                .header("Content-type", "application/json")
+                .body(Map.of("track", track))
+                .when()
+                .put(ORDER_PATH + "cancel");
     }
 }

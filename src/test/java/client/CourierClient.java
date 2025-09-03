@@ -1,36 +1,35 @@
 package client;
 
-import io.qameta.allure.Step;
 import io.restassured.response.Response;
+import model.Courier;
+import model.CourierCredentials;
 
 import static io.restassured.RestAssured.given;
 
 public class CourierClient {
-    private static final String COURIER_PATH = "/api/v1/courier/";
+    private static final String COURIER_PATH = "/api/v1/courier";
 
-    @Step("Создать курьера")
-    public Response createCourier(Object courier) {
+    public Response create(Courier courier) {
         return given()
                 .header("Content-type", "application/json")
                 .body(courier)
-                .when()
                 .post(COURIER_PATH);
     }
 
-    @Step("Авторизовать курьера")
-    public Response loginCourier(Object creds) {
+    public Response login(CourierCredentials credentials) {
         return given()
                 .header("Content-type", "application/json")
-                .body(creds)
-                .when()
-                .post(COURIER_PATH + "login");
+                .body(credentials)
+                .post(COURIER_PATH + "/login");
     }
 
-    @Step("Удалить курьера")
-    public Response deleteCourier(int courierId) {
+    public Response delete(int courierId) {
         return given()
-                .header("Content-type", "application/json")
-                .when()
-                .delete(COURIER_PATH + courierId);
+                .delete(COURIER_PATH + "/" + courierId);
+    }
+
+    public Response deleteWithoutId() {
+        return given()
+                .delete(COURIER_PATH + "/");
     }
 }
