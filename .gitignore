@@ -1,0 +1,20 @@
+# IDE
+.idea/
+*.iml
+
+# Build
+/target/*
+!/target/allure-results/
+
+# Allure local cache
+/.allure/
+
+# Root-level Allure results (игнорируем корневую папку)
+ /allure-results/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
