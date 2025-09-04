@@ -8,28 +8,23 @@ import model.Order;
 public class OrderSteps {
     private final OrderClient orderClient = new OrderClient();
 
-    @Step("Создать заказ (steps)")
+    @Step("Шаг: создать заказ")
     public Response createOrder(Order order) {
         return orderClient.createOrder(order);
     }
 
-    @Step("Отменить заказ по треку (steps)")
-    public Response cancelOrder(int track) {
-        return orderClient.cancelOrder(track);
+    @Step("Шаг: получить список заказов")
+    public Response getOrdersList() {
+        return orderClient.getOrdersList();
     }
 
-    @Step("Принять заказ (steps)")
-    public Response acceptOrder(int courierId, int orderId) {
-        return orderClient.acceptOrder(courierId, orderId);
-    }
-
-    @Step("Получить заказ по треку (steps)")
+    @Step("Шаг: получить заказ по треку")
     public Response getOrderByTrack(int track) {
         return orderClient.getOrderByTrack(track);
     }
 
-    @Step("Получить список заказов (steps)")
-    public Response getOrdersList() {
-        return orderClient.getOrdersList();
+    @Step("Шаг: принять заказ")
+    public Response acceptOrder(int courierId, int orderId) {
+        return orderClient.acceptOrder(courierId, orderId);
     }
 }

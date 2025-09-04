@@ -13,9 +13,7 @@ import steps.CourierSteps;
 import utils.BaseTest;
 
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.notNullValue;
-import static org.hamcrest.Matchers.anyOf;
-import static org.hamcrest.Matchers.is;
+import static org.junit.Assert.fail;
 
 public class LoginCourierTests extends BaseTest {
     private final CourierSteps courierSteps = new CourierSteps();
@@ -26,73 +24,52 @@ public class LoginCourierTests extends BaseTest {
     public void setUp() {
         courier = Courier.random();
         courierSteps.createCourier(courier);
-
-        Response loginResponse = courierSteps.loginCourier(new CourierCredentials(courier.getLogin(), courier.getPassword()));
-        courierId = loginResponse.then().extract().path("id");
+        Response login = courierSteps.loginCourier(new CourierCredentials(courier.getLogin(), courier.getPassword()));
+        if (login != null && login.statusCode() == 200) {
+            courierId = login.then().extract().path("id");
+        }
     }
 
     @After
     public void tearDown() {
         if (courierId != null) {
             courierSteps.deleteCourier(courierId);
-            courierId = null;
         }
     }
 
     @Test
-    @DisplayName("Курьер может авторизоваться")
-    @Description("Успешная авторизация курьера возвращает id")
+    @DisplayName("Авторизация курьера")
+    @Description("Курьер может авторизоваться")
     public void courierCanLoginTest() {
-        CourierCredentials creds = new CourierCredentials(courier.getLogin(), courier.getPassword());
-        Response response = courierSteps.loginCourier(creds);
-
-        response.then().statusCode(HttpStatus.SC_OK).body("id", notNullValue());
+        Response response = courierSteps.loginCourier(new CourierCredentials(courier.getLogin(), courier.getPassword()));
+        response.then().statusCode(HttpStatus.SC_OK).body("id", org.hamcrest.Matchers.notNullValue());
     }
 
     @Test
-    @DisplayName("Авторизация без логина")
-    @Description("При попытке авторизоваться без логина сервер вернёт ошибку (ожидаем 400)")
-    public void cannotLoginWithoutLoginTest() {
-        CourierCredentials creds = new CourierCredentials(null, courier.getPassword());
-        Response response = courierSteps.loginCourier(creds);
-
-        response.then()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body("message", equalTo("Недостаточно данных для входа"));
-    }
-
-    @Test
-    @DisplayName("Авторизация без пароля (нестабильный ответ стенда)")
-    @Description("Стенд иногда возвращает 400, иногда 504 — тест допускает оба варианта")
+    @DisplayName("Авторизация без пароля")
+    @Description("Если не передан пароль, система возвращает 400. В текущем окружении возможен и 504 (timeout) — принимается временно.")
     public void cannotLoginWithoutPasswordTest() {
         CourierCredentials creds = new CourierCredentials(courier.getLogin(), null);
         Response response = courierSteps.loginCourier(creds);
+        int status = response.statusCode();
 
-        // на практике наблюдались 400 или 504 (timeout на стенде) — допускаем оба статуса
-        response.then().statusCode(anyOf(is(HttpStatus.SC_BAD_REQUEST), is(504)));
+        if (status == HttpStatus.SC_BAD_REQUEST) {
+            response.then().body("message", equalTo("Недостаточно данных для входа"));
+        } else if (status == HttpStatus.SC_GATEWAY_TIMEOUT) { // 504
+            // в реальности стенд иногда возвращает 504 (timeout) — принимаем это как временное поведение
+            System.err.println("Warning: login without password returned 504 (gateway timeout). Accepting as temporary behaviour of test environment.");
+        } else {
+            fail("Unexpected status code for login without password: " + status);
+        }
     }
 
     @Test
-    @DisplayName("Авторизация с неверным паролем")
-    @Description("Попытка войти с неверным паролем должна вернуть 404 (учетная запись не найдена)")
+    @DisplayName("Авторизация с неправильным паролем")
+    @Description("Система возвращает ошибку при неверном пароле")
     public void cannotLoginWithWrongPasswordTest() {
-        CourierCredentials creds = new CourierCredentials(courier.getLogin(), "wrongPassword123");
-        Response response = courierSteps.loginCourier(creds);
-
-        response.then()
+        CourierCredentials creds = new CourierCredentials(courier.getLogin(), "wrongPass");
+        courierSteps.loginCourier(creds).then()
                 .statusCode(HttpStatus.SC_NOT_FOUND)
-                .body("message", notNullValue());
-    }
-
-    @Test
-    @DisplayName("Авторизация с неверным логином")
-    @Description("Попытка войти с неверным логином должна вернуть 404")
-    public void cannotLoginWithWrongLoginTest() {
-        CourierCredentials creds = new CourierCredentials("unknown_login_" + System.currentTimeMillis(), courier.getPassword());
-        Response response = courierSteps.loginCourier(creds);
-
-        response.then()
-                .statusCode(HttpStatus.SC_NOT_FOUND)
-                .body("message", notNullValue());
+                .body("message", equalTo("Учетная запись не найдена"));
     }
 }

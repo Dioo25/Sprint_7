@@ -7,61 +7,53 @@ import model.Order;
 import org.apache.http.HttpStatus;
 import org.junit.After;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import steps.OrderSteps;
 import utils.BaseTest;
 
+import java.util.Arrays;
+import java.util.Collection;
+
 import static org.hamcrest.Matchers.notNullValue;
 
+@RunWith(Parameterized.class)
+@DisplayName("Создание заказов (параметризация по цветам)")
 public class CreateOrderTests extends BaseTest {
     private final OrderSteps orderSteps = new OrderSteps();
     private Integer track;
 
+    // параметр — массив цветов (null / one / two)
+    @Parameterized.Parameters(name = "{index}: colors={0}")
+    public static Collection<Object[]> data() {
+        return Arrays.asList(new Object[][]{
+                { (String[]) null },             // без цвета
+                { new String[]{"BLACK"} },       // BLACK
+                { new String[]{"GREY"} },        // GREY
+                { new String[]{"BLACK", "GREY"} } // оба цвета
+        });
+    }
+
+    private final String[] colors;
+
+    public CreateOrderTests(String[] colors) {
+        this.colors = colors;
+    }
+
     @After
     public void tearDown() {
-        if (track != null) {
-            // отменяем заказ — чтобы не оставлять тестовые данные
-            orderSteps.cancelOrder(track);
-            track = null;
-        }
+        // у нас нет удобного API для удаления заказа — пропускаем
+        track = null;
     }
 
     @Test
-    @DisplayName("Создание заказа без цвета")
-    @Description("Можно создать заказ без указания цвета")
-    public void orderCanBeCreatedWithoutColorTest() {
-        Order order = Order.random();
+    @DisplayName("Создание заказа с параметризацией цветов")
+    @Description("Проверяем, что заказ можно создать с разными комбинациями цветов")
+    public void orderCanBeCreatedWithColorsTest() {
+        Order order = (colors == null) ? Order.random() : Order.randomWithColors(colors);
         Response response = orderSteps.createOrder(order);
         response.then().statusCode(HttpStatus.SC_CREATED).body("track", notNullValue());
-        track = response.then().extract().path("track");
-    }
 
-    @Test
-    @DisplayName("Создание заказа с цветом BLACK")
-    @Description("Можно создать заказ с цветом BLACK")
-    public void orderCanBeCreatedWithColorBlackTest() {
-        Order order = Order.randomWithColors(new String[]{"BLACK"});
-        Response response = orderSteps.createOrder(order);
-        response.then().statusCode(HttpStatus.SC_CREATED).body("track", notNullValue());
-        track = response.then().extract().path("track");
-    }
-
-    @Test
-    @DisplayName("Создание заказа с цветом GREY")
-    @Description("Можно создать заказ с цветом GREY")
-    public void orderCanBeCreatedWithColorGreyTest() {
-        Order order = Order.randomWithColors(new String[]{"GREY"});
-        Response response = orderSteps.createOrder(order);
-        response.then().statusCode(HttpStatus.SC_CREATED).body("track", notNullValue());
-        track = response.then().extract().path("track");
-    }
-
-    @Test
-    @DisplayName("Создание заказа с цветами BLACK и GREY")
-    @Description("Можно создать заказ сразу с двумя цветами")
-    public void orderCanBeCreatedWithTwoColorsTest() {
-        Order order = Order.randomWithColors(new String[]{"BLACK", "GREY"});
-        Response response = orderSteps.createOrder(order);
-        response.then().statusCode(HttpStatus.SC_CREATED).body("track", notNullValue());
         track = response.then().extract().path("track");
     }
 }

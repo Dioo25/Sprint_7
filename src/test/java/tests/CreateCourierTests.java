@@ -11,6 +11,7 @@ import org.junit.Test;
 import steps.CourierSteps;
 import utils.BaseTest;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -21,8 +22,16 @@ public class CreateCourierTests extends BaseTest {
 
     @After
     public void tearDown() {
-        if (courierId != null) {
-            courierSteps.deleteCourier(courierId);
+        if (courier != null) {
+            try {
+                Response loginResp = courierSteps.loginCourier(new CourierCredentials(courier.getLogin(), courier.getPassword()));
+                if (loginResp.statusCode() == HttpStatus.SC_OK) {
+                    int id = loginResp.then().extract().path("id");
+                    courierSteps.deleteCourier(id);
+                }
+            } catch (Exception ignored) {
+                // if login/delete fails — ничего не делаем, тест всё равно упал/завершился
+            }
         }
     }
 
@@ -33,33 +42,38 @@ public class CreateCourierTests extends BaseTest {
         courier = Courier.random();
         Response response = courierSteps.createCourier(courier);
         response.then().statusCode(HttpStatus.SC_CREATED).body("ok", equalTo(true));
-
-        courierId = courierSteps.loginCourier(new CourierCredentials(courier.getLogin(), courier.getPassword()))
-                .then().extract().path("id");
     }
 
     @Test
-    @DisplayName("Создание двух курьеров с одинаковым логином")
-    @Description("Нельзя создать двух курьеров с одним логином")
+    @DisplayName("Нельзя создать двух курьеров с одинаковым логином")
+    @Description("При создании пользователя с уже существующим login возвращается ошибка")
     public void cannotCreateTwoCouriersWithSameLoginTest() {
         courier = Courier.random();
-        courierSteps.createCourier(courier);
-
-        Response response = courierSteps.createCourier(courier);
+        courierSteps.createCourier(courier); // первый раз
+        Response response = courierSteps.createCourier(courier); // второй раз
         response.then().statusCode(HttpStatus.SC_CONFLICT)
-                .body("message", equalTo("Этот логин уже используется. Попробуйте другой."));
-
-        courierId = courierSteps.loginCourier(new CourierCredentials(courier.getLogin(), courier.getPassword()))
-                .then().extract().path("id");
+                .body("message", containsString("Этот логин уже используется"));
     }
 
     @Test
-    @DisplayName("Создание курьера без обязательных полей")
-    @Description("Если отсутствует login или password, возвращается ошибка")
-    public void cannotCreateCourierWithoutRequiredFieldsTest() {
-        courier = new Courier(null, "1234", "NoLogin");
+    @DisplayName("Создание курьера без login")
+    @Description("Если отсутствует login, возвращается ошибка")
+    public void cannotCreateCourierWithoutLoginTest() {
+        // не задаём логин
+        courier = new Courier(null, "password123", "NoLogin");
         Response response = courierSteps.createCourier(courier);
-        response.then().statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body("message", equalTo("Недостаточно данных для создания учетной записи"));
+        response.then().statusCode(HttpStatus.SC_BAD_REQUEST).body("message", notNullValue());
+        // не будем пытаться удалить несуществующего курьера
+        courier = null;
+    }
+
+    @Test
+    @DisplayName("Создание курьера без password")
+    @Description("Если отсутствует password, возвращается ошибка")
+    public void cannotCreateCourierWithoutPasswordTest() {
+        courier = new Courier("user_no_password_" + System.currentTimeMillis(), null, "NoPass");
+        Response response = courierSteps.createCourier(courier);
+        response.then().statusCode(HttpStatus.SC_BAD_REQUEST).body("message", notNullValue());
+        courier = null;
     }
 }

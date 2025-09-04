@@ -9,23 +9,23 @@ import model.CourierCredentials;
 public class CourierSteps {
     private final CourierClient courierClient = new CourierClient();
 
-    @Step("Создание курьера")
+    @Step("Шаг: создать курьера")
     public Response createCourier(Courier courier) {
-        return courierClient.create(courier);
+        return courierClient.createCourier(courier);
     }
 
-    @Step("Логин курьера")
+    @Step("Шаг: логин курьера")
     public Response loginCourier(CourierCredentials credentials) {
-        return courierClient.login(credentials);
+        return courierClient.loginCourier(credentials);
     }
 
-    @Step("Удаление курьера по id")
-    public Response deleteCourier(int courierId) {
-        return courierClient.delete(courierId);
+    @Step("Шаг: удалить курьера")
+    public Response deleteCourier(int id) {
+        return courierClient.deleteCourier(id);
     }
 
-    @Step("Удаление курьера без id")
+    @Step("Шаг: попытка удалить без id")
     public Response deleteCourierWithoutId() {
-        return courierClient.deleteWithoutId();
+        return courierClient.deleteCourierWithoutId();
     }
 }
