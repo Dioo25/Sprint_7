@@ -2,16 +2,14 @@
 .idea/
 *.iml
 
-# Build
-/target/*
-!/target/allure-results/
+# Maven
+target/*
+!target/allure-results/
+!target/allure-results/**
 
-# Allure local cache
-/.allure/
 
-# Root-level Allure results (игнорируем корневую папку)
- /allure-results/
-
+# Allure/temporary
+.allure/
 # Logs
 *.log
 
