@@ -1,0 +1,18 @@
+# IDE
+.idea/
+*.iml
+
+# Maven
+target/*
+!target/allure-results/
+!target/allure-results/**
+
+
+# Allure/temporary
+.allure/
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
